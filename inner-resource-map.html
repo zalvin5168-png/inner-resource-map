@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>內在資源盤點 | 薩提爾冰山導航儀</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        .glow-effect {
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-white pb-20">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-amber-200 flex items-center justify-center text-slate-950 font-bold shadow-lg">
+                <i class="fa-solid fa-compass text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-bold tracking-wide text-slate-100">內在資源盤點</h1>
+                <p class="text-xs text-slate-400">薩提爾冰山 × 照亮者導航儀</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="switchTab('stages')" id="nav-stages" class="px-3 py-1.5 text-xs font-medium rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all">
+                <i class="fa-solid fa-map-location-dot mr-1"></i> 旅程關卡
+            </button>
+            <button onclick="switchTab('journal')" id="nav-journal" class="px-3 py-1.5 text-xs font-medium rounded-full bg-slate-800 text-slate-400 border border-slate-700 transition-all">
+                <i class="fa-solid fa-book-open mr-1"></i> 我的覺察
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-5">
+
+        <!-- STAGES VIEW -->
+        <div id="view-stages" style="display: block;" class="space-y-6">
+            <div class="bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700/60 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+                <h2 class="text-lg font-bold text-amber-300 mb-2 flex items-center">
+                    <i class="fa-solid fa-fire-flame-curved mr-2 text-amber-400"></i> 把力量放對位置
+                </h2>
+                <p class="text-xs text-slate-300 leading-relaxed mb-4">
+                    當我們被防衛或匱乏卡住時，常常是把資源放錯了位置。一層一層推進，解鎖每一層的「照亮者小結」，找回屬於你的正向力量。
+                </p>
+                <div class="space-y-1.5">
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span>旅程點亮進度</span>
+                        <span id="progress-text">0 / 4 燈塔點亮</span>
+                    </div>
+                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="bg-gradient-to-r from-amber-500 to-sky-400 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stages-container" class="space-y-4"></div>
+        </div>
+
+        <!-- CARDS VIEW -->
+        <div id="view-cards" style="display: none;" class="space-y-4">
+            <div class="flex items-center justify-between mb-2">
+                <button onclick="backToStages()" class="text-xs text-slate-400 hover:text-white flex items-center bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <i class="fa-solid fa-arrow-left mr-1.5"></i> 返回關卡清單
+                </button>
+                <span id="stage-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30"></span>
+            </div>
+
+            <div class="text-center pb-2">
+                <h2 id="current-stage-title" class="text-lg font-bold text-slate-100"></h2>
+                <p id="current-stage-desc" class="text-xs text-slate-400 mt-0.5"></p>
+            </div>
+
+            <div id="card-swiper-container" class="relative w-full min-h-[380px] flex items-center justify-center"></div>
+
+            <div id="card-nav-buttons" class="flex items-center justify-between pt-2">
+                <button id="prev-card-btn" onclick="prevCard()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 text-xs font-medium disabled:opacity-40">
+                    <i class="fa-solid fa-chevron-left mr-1"></i> 上一張
+                </button>
+                <span id="card-counter" class="text-xs text-slate-400 font-mono">1 / 4</span>
+                <button id="next-card-btn" onclick="nextCard()" class="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs shadow-lg hover:bg-amber-400 transition-all">
+                    下一張 <i class="fa-solid fa-chevron-right ml-1"></i>
+                </button>
+            </div>
+
+            <div id="illuminator-box" style="display: none;" class="bg-gradient-to-br from-amber-500/10 via-slate-800 to-sky-500/10 border border-amber-500/40 rounded-2xl p-5 shadow-xl space-y-3 mt-4">
+                <div class="flex items-center space-x-2 text-amber-400">
+                    <i class="fa-solid fa-sun text-xl"></i>
+                    <h3 class="font-bold text-sm tracking-wide">照亮者小結（本層燈塔已點亮）</h3>
+                </div>
+                <p id="illuminator-text" class="text-xs text-slate-200 leading-relaxed italic border-l-2 border-amber-500 pl-3 py-0.5"></p>
+                <button onclick="completeStageAndReturn()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition-all">
+                    收下這道光，返回關卡地圖 <i class="fa-solid fa-check ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- JOURNAL VIEW -->
+        <div id="view-journal" style="display: none;" class="space-y-4">
+            <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-xl">
+                <h2 class="text-sm font-bold text-slate-200 mb-1 flex items-center">
+                    <i class="fa-solid fa-feather-pointed mr-2 text-amber-400"></i> 我的覺察筆記
+                </h2>
+                <p class="text-xs text-slate-400 mb-3">記錄你在探索過程中的體悟、防衛覺察或資源歸位心得。</p>
+                <textarea id="journal-input" rows="3" placeholder="寫下你此刻的內在覺察與體悟..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 resize-none"></textarea>
+                <div class="flex items-center justify-between mt-2">
+                    <select id="journal-tag" class="bg-slate-900 border border-slate-700 text-xs text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500">
+                        <option value="日常照顧">💡 日常照顧</option>
+                        <option value="防衛覺察">🛡️ 防衛覺察</option>
+                        <option value="冰山渴望">🌊 冰山渴望</option>
+                        <option value="資源歸位">🌟 資源歸位</option>
+                    </select>
+                    <button onclick="saveJournal()" class="px-4 py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg shadow hover:bg-amber-400 transition-all">
+                        保存筆記
+                    </button>
+                </div>
+            </div>
+            <div id="journal-list" class="space-y-3"></div>
+        </div>
+
+    </main>
+
+    <footer class="py-4 text-center text-[10px] text-slate-500 border-t border-slate-800 mt-auto">
+        內在資源盤點 · 薩提爾冰山對話卡牌導航儀 © 2026
+    </footer>
+
+    <script>
+        const stagesData = [
+            {
+                id: 1,
+                title: "第一階段：日常節奏與自我照顧",
+                subtitle: "看見身體與心靈的日常資源",
+                icon: "fa-seedling",
+                color: "from-emerald-500/20 to-teal-500/20",
+                borderColor: "border-emerald-500/30",
+                textColor: "text-emerald-400",
+                illuminatorText: "「照顧好自己，不是自私，而是所有關係最穩固的根基。當你學會聽懂身體的疲憊、為自己保留一片安靜的空間時，你已經在黑暗中點亮了第一盞燈——自我安撫的力量。你不需要向外抓取，因為豐盛就住在你的日常裡。」",
+                cards: [
+                    { title: "滋養的節奏", subtitle: "充電與壓力調節", question: "平常當你覺得心裡有點累、或是需要充充電的時候，你最習慣用什麼方式讓自己重新慢下來？", defense: "習慣用「忙碌、抱怨、或過度壓抑」來逃避疲憊，把能量默默耗盡。", resource: "將「懂得獨處、自我修復」的內在資源找回來，學會先好好照顧自己，而不是把伴侶當成唯一的救贖。" },
+                    { title: "熱情與自主", subtitle: "生活方向感", question: "最近有沒有什麼事情（不管多小），是你做起來會覺得很有成就感、或是眼神會發光的？", defense: "陷入「隨波逐流、覺得生活無趣、或過度依賴別人給予刺激」的匱乏感。", resource: "點燃內在對生命的自主性與熱情，讓自己成為一個活得有生命力、吸引人靠近的獨立個體。" },
+                    { title: "內在邊界", subtitle: "獨處與陪伴的平衡", question: "如果有完全屬於你的一整天，不用回應任何人的期待，你最想為自己規劃什麼樣的時光？", defense: "害怕孤單而抓著關係不放（討好），或是過度疏離將人推開（打岔／超理智）。", resource: "建立健康的心理邊界，享受「有親密、也有自我空間」的成熟平衡。" },
+                    { title: "身體的智慧", subtitle: "覺察身心訊號", question: "當生活壓力比較大的時候，你的身體通常會發出什麼樣的訊號（例如肩膀緊繃、或是特別想睡覺）？你是怎麼回應它的？", defense: "長期忽略身體感受，靠死撐硬扛來證明自己，甚至對別人的關心感到不耐煩。", resource: "連結身體的智慧，將「覺察力」化作溫柔善待自己的正向資源。" }
+                ]
+            },
+            {
+                id: 2,
+                title: "第二階段：關係經驗與防衛姿態",
+                subtitle: "看見過去的傷口如何變成保護罩",
+                icon: "fa-shield-halved",
+                color: "from-amber-500/20 to-orange-500/20",
+                borderColor: "border-amber-500/30",
+                textColor: "text-amber-400",
+                illuminatorText: "「那些防備、冷漠或爭吵，過去曾保護我們不受傷；而現在，當我們願意回頭看見它只是個『保護罩』時，力量就回到了手上。就像看見父親給予的資產一樣，你把過去所有的跌撞，轉化成了滋養自己成熟的養分。你正在點亮第二盞燈——接納與轉化。」",
+                cards: [
+                    { title: "生命的養分", subtitle: "從經歷中淬鍊韌性", question: "回想過去的幾段經歷或關係，有沒有哪一次的經驗，讓你發現自己其實比想像中更有韌性、也學到了很寶貴的事？", defense: "困在「受害者心態」或「怪罪過去」裡，把過去的傷痛當成拒絕敞開的武器（指責）。", resource: "把過去所有跌撞與原生家庭給予的痕跡，重新視為「厚植自己成熟度與同理心」的珍貴資產。" },
+                    { title: "衝突中的姿態", subtitle: "面對意見不合的應對", question: "當兩個人意見不合、感覺有情緒卡住的時候，你覺得什麼樣的溝通方式，最能讓彼此的心舒服地貼近？", defense: "遇到衝突時習慣「冷處理（逃避）」或是「爭輸贏（指責）」？", resource: "把「想要保護自己不受傷」的防衛，轉化為「願意表達感受、一起解決問題」的建設性力量。" },
+                    { title: "信任與心理邊界", subtitle: "安全感的定義", question: "對你來說，在一段親密關係裡，能讓兩個人都感到很放心、有極高信任感的『心理邊界』長什麼樣子？", defense: "因為內在不安全感，而變成「過度掌控、試探對方、或設下重重防備」。", resource: "建立清晰且尊重的界線，信任自己有能力承擔親密，也允許對方有空間。" },
+                    { title: "脆弱的勇氣", subtitle: "卸下武裝的時刻", question: "在什麼樣的環境或對象面前，會讓你覺得『在這裡我不用裝堅強，可以安心當個小孩或展現脆弱』？", defense: "認為「展現脆弱就是軟弱、會被看不起」，因而凡事硬扛（超理智姿態）。", resource: "認出「敢於柔軟、敢於求助」其實是最高級的內在力量。" }
+                ]
+            },
+            {
+                id: 3,
+                title: "第三階段：情感流動與冰山渴望",
+                subtitle: "從匱乏走向被看見、被理解",
+                icon: "fa-water",
+                color: "from-sky-500/20 to-blue-500/20",
+                borderColor: "border-sky-500/30",
+                textColor: "text-sky-400",
+                illuminatorText: "「我們心裡最深處的渴望，其實都只是希望能『被看見、被理解、被好好接住』。當你不再用匱乏去要求，而是用好奇去聆聽時，愛就有了流動的空間。你點亮了第三盞燈——深刻的連結。在這裡，允許自己犯錯，也允許對方有空間。」",
+                cards: [
+                    { title: "愛的語言", subtitle: "深層情感需求", question: "每個人感受愛的方式不太一樣，在什麼樣的時刻，你會最深刻地感覺到自己『被好好聽見、被真正理解了』？", defense: "總是覺得「對方都不懂我」，陷入「向外索取認同、對方做什麼都不夠」的匱乏感。", resource: "先學會自己滿足自己的渴望（自我安撫），當伴侶給予時是「豐盛的加分」而不是「救命稻草」。" },
+                    { title: "允許不完美", subtitle: "情感帳戶與犯錯空間", question: "當你偶爾展現出不完美、或是心情低落的時候，你最希望另一半是用什麼樣的態度或眼神陪伴在旁邊？", defense: "對自己或對方極度嚴格，只要有一點小瑕疵就想否定整段關係（完美主義／討伐）。", resource: "允許自己犯錯，也允許對方犯錯，在關係中建立安全的「情感帳戶」，累積無條件的信任。" },
+                    { title: "欣賞的視角", subtitle: "看見彼此的光芒", question: "在朋友或伴侶身上，什麼樣的性格特質或品質，會讓你發自內心感到欣賞與敬佩？", defense: "習慣放大別人的缺點或挑剔，用挑毛病來保護自己免受失望。", resource: "喚醒內在的欣賞與感恩能力，當你能看見別人的亮點，你的內心也會隨之變得富足。" },
+                    { title: "情緒的接住", subtitle: "陪伴與傾聽的渴望", question: "當你心裡有委屈或情緒時，比起『立刻得到解決辦法的建議』，你通常更希望對方怎麼陪你？", defense: "當別人給建議時感到被否定，因而把心門關上，變成「我不理你了」。", resource: "清晰看見自己內心深處其實只是渴望「被同理、被接住」，學會溫柔地向對方表達這份渴望。" }
+                ]
+            },
+            {
+                id: 4,
+                title: "第四階段：資源歸位與共同願景",
+                subtitle: "把力量放對位置，迎向成熟關係",
+                icon: "fa-sun",
+                color: "from-purple-500/20 to-pink-500/20",
+                borderColor: "border-purple-500/30",
+                textColor: "text-purple-400",
+                illuminatorText: "「力量不再錯置，所有的正向資源都回到了對的位置。你不再是當年的受困者，而是自己生命的導航員。你點亮了最後一盞燈——全然的整合與自由。帶著這道光，去享受那種既有親密、又能做自己的成熟關係吧。」",
+                cards: [
+                    { title: "自我覺察與內在力量", subtitle: "找回主體性", question: "如果用三個詞來形容現在的自己，你覺得最能代表你內在美好品質的是哪三個詞？", defense: "覺得自己「什麼都做不好」、「都是別人的錯」，把生命的主導權交出去。", resource: "看見自己身上那些「從小到大自己長出來的、或是生命賦予你的正向特質」，大方承認並擁抱它。" },
+                    { title: "共同創造的藍圖", subtitle: "未來的成熟關係", question: "如果想像幾年後的理想生活，你希望那時的自己呈現出一種什麼樣的生活狀態與內在心境？", defense: "對未來感到焦慮恐慌，或者活在「反正以後也不會好」的消極裡。", resource: "將焦點從「擔心失去或受傷」轉向「共同創造」，與對的人一起攜手變成更好的自己。" },
+                    { title: "相互為榮", subtitle: "彼此支持的力量", question: "在過去的經歷中，有沒有一句話或一種支持方式，曾深深給了你力量，讓你覺得『有人懂我、支持我』真的很好？", defense: "習慣一個人扛所有事，覺得「靠別人不如靠自己」，拒絕任何人的支持。", resource: "打開心胸，讓「以彼此為榮、互相支持」的正面能量在關係中流動。" },
+                    { title: "生命的整合", subtitle: "迎向完整的自己", question: "回看一路走來的自己，如果對現在這個認真生活、不斷探索的自己說一句感謝的話，你會想說什麼？", defense: "總是苛責自己哪裡還不够好、哪裡還需要改進（永遠在追趕的匱乏感）。", resource: "溫柔地整合過去所有的光亮與陰影，全然接納自己，這就是最強大的內在資源。" }
+                ]
+            }
+        ];
+
+        let completedStages = JSON.parse(localStorage.getItem('satir_completed_stages')) || [];
+        let journalNotes = JSON.parse(localStorage.getItem('satir_journal_notes')) || [
+            { id: 1, text: "今天覺察到自己在疲憊時容易開啟超理智防衛，提醒自己先停下來深呼吸。", tag: "防衛覺察", date: "2026-03-07" }
+        ];
+
+        let currentStageId = null;
+        let currentCardIndex = 0;
+
+        function initApp() {
+            renderStages();
+            updateProgress();
+            renderJournal();
+        }
+
+        function switchTab(tab) {
+            document.getElementById('view-stages').style.display = 'none';
+            document.getElementById('view-cards').style.display = 'none';
+            document.getElementById('view-journal').style.display = 'none';
+
+            document.getElementById('nav-stages').className = "px-3 py-1.5 text-xs font-medium rounded-full bg-slate-800 text-slate-400 border border-slate-700 transition-all";
+            document.getElementById('nav-journal').className = "px-3 py-1.5 text-xs font-medium rounded-full bg-slate-800 text-slate-400 border border-slate-700 transition-all";
+
+            if (tab === 'stages') {
+                document.getElementById('view-stages').style.display = 'block';
+                document.getElementById('nav-stages').className = "px-3 py-1.5 text-xs font-medium rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all";
+            } else if (tab === 'journal') {
+                document.getElementById('view-journal').style.display = 'block';
+                document.getElementById('nav-journal').className = "px-3 py-1.5 text-xs font-medium rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-all";
+                renderJournal();
+            }
+        }
+
+        function renderStages() {
+            const container = document.getElementById('stages-container');
+            container.innerHTML = '';
+            stagesData.forEach((stage) => {
+                const isCompleted = completedStages.includes(stage.id);
+                container.innerHTML += `
+                    <div onclick="openStage(${stage.id})" class="bg-slate-800/90 border ${isCompleted ? 'border-amber-500/50 glow-effect' : 'border-slate-700'} rounded-2xl p-4 shadow-lg cursor-pointer hover:border-amber-400/60 transition-all flex items-center justify-between group">
+                        <div class="flex items-center space-x-3.5">
+                            <div class="w-11 h-11 rounded-xl bg-gradient-to-br ${stage.color} border ${stage.borderColor} flex items-center justify-center ${stage.textColor} text-lg shadow-inner">
+                                <i class="fa-solid ${stage.icon}"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h3 class="font-bold text-sm text-slate-200 group-hover:text-amber-300 transition-colors">${stage.title}</h3>
+                                    ${isCompleted ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30 font-medium"><i class="fa-solid fa-sun mr-1"></i>燈塔已點亮</span>' : ''}
+                                </div>
+                                <p class="text-xs text-slate-400 mt-0.5">${stage.subtitle} (4張深度卡牌)</p>
+                            </div>
+                        </div>
+                        <div class="text-slate-500 group-hover:text-amber-400 transition-colors pr-1">
+                            <i class="fa-solid fa-chevron-right text-sm"></i>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateProgress() {
+            const count = completedStages.length;
+            document.getElementById('progress-text').innerText = `${count} / 4 燈塔點亮`;
+            document.getElementById('progress-bar').style.width = `${(count / 4) * 100}%`;
+        }
+
+        function openStage(stageId) {
+            currentStageId = stageId;
+            currentCardIndex = 0;
+            const stage = stagesData.find(s => s.id === stageId);
+            
+            document.getElementById('view-stages').style.display = 'none';
+            document.getElementById('view-cards').style.display = 'block';
+            document.getElementById('view-journal').style.display = 'none';
+
+            document.getElementById('stage-badge').innerText = `關卡 ${stage.id} / 4`;
+            document.getElementById('current-stage-title').innerText = stage.title;
+            document.getElementById('current-stage-desc').innerText = stage.subtitle;
+            
+            document.getElementById('illuminator-box').style.display = 'none';
+            document.getElementById('card-swiper-container').style.display = 'flex';
+            document.getElementById('card-nav-buttons').style.display = 'flex';
+            
+            renderCurrentCard();
+        }
+
+        function backToStages() {
+            document.getElementById('view-cards').style.display = 'none';
+            document.getElementById('view-stages').style.display = 'block';
+            renderStages();
+            updateProgress();
+        }
+
+        function renderCurrentCard() {
+            const stage = stagesData.find(s => s.id === currentStageId);
+            const card = stage.cards[currentCardIndex];
+            document.getElementById('card-counter').innerText = `${currentCardIndex + 1} / ${stage.cards.length}`;
+            document.getElementById('prev-card-btn').disabled = currentCardIndex === 0;
+
+            const nextBtn = document.getElementById('next-card-btn');
+            if (currentCardIndex === stage.cards.length - 1) {
+                nextBtn.innerHTML = `查看照亮者小結 <i class="fa-solid fa-sun ml-1"></i>`;
+            } else {
+                nextBtn.innerHTML = `下一張 <i class="fa-solid fa-chevron-right ml-1"></i>`;
+            }
+
+            document.getElementById('card-swiper-container').innerHTML = `
+                <div class="perspective-1000 w-full h-[380px] cursor-pointer" onclick="flipCard(this)">
+                    <div class="transform-style-3d relative w-full h-full transition-transform duration-500 rounded-2xl shadow-2xl" id="card-inner">
+                        <div class="backface-hidden absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/80 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-[11px] font-semibold uppercase px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/25">${card.subtitle}</span>
+                                    <span class="text-xs text-slate-500"><i class="fa-solid fa-rotate mr-1"></i>點擊翻牌</span>
+                                </div>
+                                <h3 class="text-base font-bold text-slate-100 mb-2">${card.title}</h3>
+                                <div class="my-4 bg-slate-900/60 border border-slate-700/60 rounded-xl p-4">
+                                    <p class="text-xs text-amber-200/90 leading-relaxed font-medium">"${card.question}"</p>
+                                </div>
+                            </div>
+                            <div class="text-center pb-1"><span class="text-[11px] text-slate-400 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">查看背面防衛覺察與資源歸位 ⬇</span></div>
+                        </div>
+                        <div class="backface-hidden absolute inset-0 rotate-y-180 bg-gradient-to-br from-slate-900 to-slate-800 border border-amber-500/30 rounded-2xl p-6 flex flex-col justify-between shadow-xl overflow-y-auto">
+                            <div class="space-y-3">
+                                <h4 class="text-xs font-bold text-amber-400 uppercase"><i class="fa-solid fa-shield-halved mr-1.5"></i> 應對姿態覺察</h4>
+                                <p class="text-xs text-slate-300 bg-slate-950/50 border border-slate-800 rounded-lg p-2.5">${card.defense}</p>
+                                <h4 class="text-xs font-bold text-sky-400 uppercase pt-2"><i class="fa-solid fa-seedling mr-1.5"></i> 資源歸位與渴望</h4>
+                                <p class="text-xs text-slate-200 bg-sky-950/20 border border-sky-500/20 rounded-lg p-2.5">${card.resource}</p>
+                            </div>
+                            <div class="text-center pt-2"><span class="text-[10px] text-slate-400">再點一次翻回正面</span></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function flipCard(element) {
+            const ci = element.querySelector('#card-inner');
+            ci.style.transform = ci.style.transform === 'rotateY(180deg)' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+        }
+
+        function nextCard() {
+            const stage = stagesData.find(s => s.id === currentStageId);
+            if (currentCardIndex < stage.cards.length - 1) {
+                currentCardIndex++;
+                renderCurrentCard();
+            } else {
+                // Hide card and nav buttons, show illuminator box cleanly
+                document.getElementById('card-swiper-container').style.display = 'none';
+                document.getElementById('card-nav-buttons').style.display = 'none';
+
+                document.getElementById('illuminator-text').innerText = stage.illuminatorText;
+                document.getElementById('illuminator-box').style.display = 'block';
+            }
+        }
+
+        function prevCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                document.getElementById('illuminator-box').style.display = 'none';
+                document.getElementById('card-swiper-container').style.display = 'flex';
+                document.getElementById('card-nav-buttons').style.display = 'flex';
+                renderCurrentCard();
+            }
+        }
+
+        function completeStageAndReturn() {
+            if (!completedStages.includes(currentStageId)) {
+                completedStages.push(currentStageId);
+                localStorage.setItem('satir_completed_stages', JSON.stringify(completedStages));
+            }
+            backToStages();
+        }
+
+        function saveJournal() {
+            const input = document.getElementById('journal-input');
+            const tag = document.getElementById('journal-tag').value;
+            const text = input.value.trim();
+            if (!text) return alert('請寫下一些覺察內容再保存唷！');
+            journalNotes.unshift({ id: Date.now(), text, tag, date: new Date().toISOString().split('T')[0] });
+            localStorage.setItem('satir_journal_notes', JSON.stringify(journalNotes));
+            input.value = '';
+            renderJournal();
+        }
+
+        function renderJournal() {
+            const list = document.getElementById('journal-list');
+            list.innerHTML = journalNotes.length === 0 ? '<div class="text-center py-8 text-xs text-slate-500">目前還沒有覺察筆記</div>' : '';
+            journalNotes.forEach(n => {
+                list.innerHTML += `
+                    <div class="bg-slate-800/80 border border-slate-700/80 rounded-xl p-4 shadow space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] px-2 py-0.5 rounded-full border bg-amber-500/20 text-amber-300">${n.tag}</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[10px] text-slate-500">${n.date}</span>
+                                <button onclick="deleteJournal(${n.id})" class="text-slate-500 hover:text-rose-400 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-200">${n.text}</p>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteJournal(id) {
+            journalNotes = journalNotes.filter(n => n.id !== id);
+            localStorage.setItem('satir_journal_notes', JSON.stringify(journalNotes));
+            renderJournal();
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
